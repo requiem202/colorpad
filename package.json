@@ -1,6 +1,6 @@
 {
   "name": "colorpad",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "A color-only pad",
   "scripts": {
     "build": "node tasks/release.js",
@@ -76,8 +76,5 @@
     "vue-template-compiler": "^2.1.10",
     "webpack": "^2.2.1",
     "webpack-dev-server": "^2.3.0"
-  },
-  "dependencies": {
-    "tinycolor2": "^1.4.1"
   }
 }

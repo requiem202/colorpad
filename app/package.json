@@ -5,11 +5,13 @@
   "main": "./dist/main.js",
   "dependencies": {
     "babel-runtime": "^6.23.0",
-    "vue": "^2.1.10",
+    "vue": "^2.2.6",
     "vue-electron": "^1.0.6",
     "vue-resource": "^1.0.3",
     "vue-router": "^2.1.2",
-    "vuex": "^2.1.1"
+    "vuex": "^2.3.1",
+    "tinycolor2": "^1.4.1",
+    "vue-awesome": "^2.2.5"
   },
   "devDependencies": {},
   "author": "Vachara Suwansophon <requiem202@hotmail.com>"

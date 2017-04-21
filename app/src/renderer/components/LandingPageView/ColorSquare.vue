@@ -36,7 +36,7 @@
         },
         textColor: () => {
           let c = tinycolor(this.bg())
-          if (!c.isValid() || c.getBrightness() > 110) {
+          if (!c.isValid() || c.isLight()) {
             return '#333'
           }
           return '#ffffff'
