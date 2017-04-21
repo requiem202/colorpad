@@ -2,7 +2,13 @@
   <div>
       <transition-group name="colors" tag="ul">
           <transition-group name="colors-row" tag="li" v-for="row in colors" v-bind:key="row" class="colors-row">
-              <color-square v-for="(item, index) in row" v-model="row[index]" v-bind:key="item" class="colors-row-item"></color-square>
+              <color-square
+                      v-for="(item, index) in row"
+                      v-model="row[index]"
+                      v-bind:key="item"
+                      v-on:del="delItem(row, item, index)"
+                      class="colors-row-item">
+              </color-square>
               <empty-square v-on:click.native="addItem(row)" v-bind:key="row"></empty-square>
           </transition-group>
       </transition-group>
@@ -94,6 +100,13 @@
             bgHex: tinycolor.random().toHexString()
           }
         ])
+      },
+      delItem: function (row, item, index) {
+        row.splice(index, 1)
+        if (row.length <= 0) {
+          let i = colors.indexOf(row)
+          colors.splice(i, 1)
+        }
       }
     },
     created: function () {
@@ -116,10 +129,7 @@
         display: flex;
         transition: all 0.25s ease-out;
     }
-    .color-square.colors-row-item {
-        /* replace .color-square*/
-        transition: all 0.25s ease-out, backgroud-color 0.25s linear;
-    }
+
     .colors-enter, .colors-leave-to {
         opacity: 0;
         transform: translateY(-30px);
