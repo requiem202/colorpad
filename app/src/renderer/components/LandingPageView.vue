@@ -1,11 +1,11 @@
 <template>
   <div>
-      <ul>
-          <li v-for="row in colors">
-              <color-square v-for="(item, index) in row" v-model="row[index]"></color-square>
-              <empty-square v-on:click.native="addItem(row)"></empty-square>
-          </li>
-      </ul>
+      <transition-group name="colors" tag="ul">
+          <transition-group name="colors-row" tag="li" v-for="row in colors" v-bind:key="row" class="colors-row">
+              <color-square v-for="(item, index) in row" v-model="row[index]" v-bind:key="item" class="colors-row-item"></color-square>
+              <empty-square v-on:click.native="addItem(row)" v-bind:key="row"></empty-square>
+          </transition-group>
+      </transition-group>
       <div>
           <empty-square v-on:click.native="addRow()"></empty-square>
       </div>
@@ -105,19 +105,27 @@
 </script>
 
 <style scoped>
-    img {
-        margin-top: -25px;
-        width: 450px;
-    }
     ul {
         list-style: none;
         clear: both;
         display: block;
     }
 
-    ul li {
+    .colors-row {
         clear: both;
         display: flex;
+        transition: all 0.25s ease-out;
     }
-
+    .color-square.colors-row-item {
+        /* replace .color-square*/
+        transition: all 0.25s ease-out, backgroud-color 0.25s linear;
+    }
+    .colors-enter, .colors-leave-to {
+        opacity: 0;
+        transform: translateY(-30px);
+    }
+    .colors-row-enter-active, .colors-row-leave-to {
+        opacity: 0;
+        transform: translateX(-30px);
+    }
 </style>

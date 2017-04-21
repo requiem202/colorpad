@@ -1,7 +1,7 @@
 <template>
-  <a class="empty-square" href="#">
+  <span class="empty-square">
     <icon name="plus-circle" class="add"></icon>
-  </a>
+  </span>
 </template>
 
 <script>
@@ -29,6 +29,7 @@
     background-color: rgba(229, 229, 229, .85);
     color: #bbb;
     transition: all 0.25s linear;
+    cursor: pointer;
   }
   .empty-square:hover {
     color: #777;
