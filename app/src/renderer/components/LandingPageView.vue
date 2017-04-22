@@ -1,19 +1,26 @@
 <template>
-  <div>
-      <transition-group name="colors" tag="ul">
-          <transition-group name="colors-row" tag="li" v-for="row in colors" v-bind:key="row" class="colors-row">
-              <color-square
-                      v-for="(item, index) in row"
-                      v-model="row[index]"
-                      v-bind:key="item"
-                      v-on:del="delItem(row, item, index)"
-                      class="colors-row-item">
-              </color-square>
-              <empty-square v-on:click.native="addItem(row)" v-bind:key="row"></empty-square>
+  <div class="main">
+      <transition name="slideIn">
+          <div class="library" v-show="showLibrary">
+            <library v-bind:collection="library" v-bind:currentId="currentId"></library>
+          </div>
+      </transition>
+      <div class="workspace">
+          <transition-group name="colors" tag="ul">
+              <transition-group name="colors-row" tag="li" v-for="row in colors()" v-bind:key="row" class="colors-row">
+                  <color-square
+                          v-for="(item, index) in row"
+                          v-model="row[index]"
+                          v-bind:key="item"
+                          v-on:del="delItem(row, item, index)"
+                          class="colors-row-item">
+                  </color-square>
+                  <empty-square v-on:click.native="addItem(row)" v-bind:key="row"></empty-square>
+              </transition-group>
           </transition-group>
-      </transition-group>
-      <div>
-          <empty-square v-on:click.native="addRow()"></empty-square>
+          <div>
+              <empty-square v-on:click.native="addRow()"></empty-square>
+          </div>
       </div>
   </div>
 </template>
@@ -21,53 +28,108 @@
 <script>
   import ColorSquare from './LandingPageView/ColorSquare'
   import EmptySquare from './LandingPageView/EmptySquare'
-  const {dialog} = require('electron').remote
+  import Library from './Library'
+//  const {dialog} = require('electron').remote
   const ipcRenderer = require('electron').ipcRenderer
-  const fs = require('fs')
+//  const fs = require('fs')
+  const guid = require('guid')
   const tinycolor = require('tinycolor2')
-  let colors = []
+  const storage = require('electron-json-storage')
+  const USER_LIBRARY = 'userLibrary'
 
-  ipcRenderer.on('file-save', function () {
-    dialog.showSaveDialog(
-      {'defaultPath': 'mycolors.json'},
-      function (fileName) {
-        if (fileName === undefined) return
+  let _isEmptyObject = function (obj) {
+    for (let p in obj) {
+      return false
+    }
+    return true
+  }
 
-        fs.writeFile(fileName, JSON.stringify(colors), function (err) {
-          if (err) {
-            throw err
-          }
-        })
-      })
+  let library = {}
+  let currentId = ''
+//  let colors = []
+
+//  storage.set(USER_LIBRARY, {library: library}, function (error) {
+//    if (error) throw error
+//  })
+//  storage.clear(function (error) {
+//    if (error) throw error
+//  })
+  storage.get(USER_LIBRARY, function (error, data) {
+    if (error) throw error
+
+//    console.log(data)
+    if (!data) return
+    library = data.library
   })
-  ipcRenderer.on('file-open', function () {
-    dialog.showOpenDialog(function (fileNames) {
-      if (fileNames === undefined) return
 
-      let fileName = fileNames[0]
-
-      fs.readFile(fileName, 'utf-8', function (err, data) {
-        if (err) {
-          throw err
+  let newCollection = function () {
+    return {
+      id: guid.raw(),
+      name: 'Untitled collection',
+      colors: [[
+        {
+          bgHex: tinycolor.random().toHexString()
         }
-        let tmp = JSON.parse(data)
-        colors.splice(0, 1)
-        tmp.forEach(function (item, index) {
-          colors.push(tmp[index])
-        })
-      })
-    })
-  })
+      ]]
+    }
+  }
+  if (_isEmptyObject(this.library)) {
+    let collection = newCollection()
+    library[collection.id] = collection
+    currentId = collection.id
+  }
+
+//  ipcRenderer.on('file-save', function () {
+//    dialog.showSaveDialog(
+//      {'defaultPath': 'mycolors.json'},
+//      function (fileName) {
+//        if (fileName === undefined) return
+//
+//        fs.writeFile(fileName, JSON.stringify(colors), function (err) {
+//          if (err) {
+//            throw err
+//          }
+//        })
+//      })
+//  })
+//  ipcRenderer.on('file-open', function () {
+//    dialog.showOpenDialog(function (fileNames) {
+//      if (fileNames === undefined) return
+//
+//      let fileName = fileNames[0]
+//
+//      fs.readFile(fileName, 'utf-8', function (err, data) {
+//        if (err) {
+//          throw err
+//        }
+//        let tmp = JSON.parse(data)
+//        colors.splice(0, 1)
+//        tmp.forEach(function (item, index) {
+//          colors.push(tmp[index])
+//        })
+//      })
+//    })
+//  })
 
   export default {
     components: {
+      Library,
       ColorSquare,
       EmptySquare
     },
     name: 'landing-page',
     data () {
       return {
-        colors: colors
+        library: library,
+        showLibrary: false,
+        currentId: currentId,
+        collection: (id) => {
+          if (id) return this.library[id]
+          return this.library[this.currentId]
+        },
+        colors: () => {
+          return this.collection().colors
+        }
       }
     },
     methods: {
@@ -95,7 +157,7 @@
         )
       },
       addRow: function () {
-        this.colors.push([
+        this.colors().push([
           {
             bgHex: tinycolor.random().toHexString()
           }
@@ -104,20 +166,46 @@
       delItem: function (row, item, index) {
         row.splice(index, 1)
         if (row.length <= 0) {
-          let i = colors.indexOf(row)
-          colors.splice(i, 1)
+          let i = this.colors().indexOf(row)
+          this.colors().splice(i, 1)
         }
-      }
+      },
+      toggleLibrary: function () {
+        this.showLibrary = !this.showLibrary
+      },
+      newCollection: newCollection
     },
     created: function () {
-      if (this.colors.length === 0) {
-        this.addRow()
-      }
+      let that = this
+      ipcRenderer.on('open-library', function () {
+        that.toggleLibrary()
+      })
     }
   }
 </script>
 
-<style scoped>
+<style scoped lang="less">
+    .main {
+        display: flex;
+    }
+    .library {
+        background-color: white;
+        min-width: 250px;
+    }
+    .workspace {
+        width: 100%;
+        transition: all .4s;
+    }
+
+    .slideIn-enter-active {
+        transition: all .4s
+    }
+    .slideIn-leave-active {
+        transition: all .7s
+    }
+    .slideIn-enter, .slideIn-leave-to {
+        transform: translateX(-100%);
+    }
     ul {
         list-style: none;
         clear: both;
@@ -129,7 +217,6 @@
         display: flex;
         transition: all 0.25s ease-out;
     }
-
     .colors-enter, .colors-leave-to {
         opacity: 0;
         transform: translateY(-30px);

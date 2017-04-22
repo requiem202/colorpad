@@ -1,3 +1,4 @@
+![alt tag](https://raw.githubusercontent.com/requiem202/colorpad/master/app/images/colorpad.png)
 # colorpad
 
 > A simple notepad-like app to stores colors.
