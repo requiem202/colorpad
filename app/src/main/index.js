@@ -44,6 +44,14 @@ function createWindow () {
             let focusedWindow = BrowserWindow.getFocusedWindow()
             focusedWindow.webContents.send('file-save')
           }
+        },
+        { role: 'export',
+          label: 'Export',
+          accelerator: 'CmdOrCtrl+E',
+          click: function () {
+            let focusedWindow = BrowserWindow.getFocusedWindow()
+            focusedWindow.webContents.send('file-export')
+          }
         }
       ]
     },

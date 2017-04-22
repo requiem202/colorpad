@@ -2,7 +2,11 @@
   <div class="main">
       <transition name="slideIn">
           <div class="library" v-show="showLibrary">
-            <library v-bind:collection="library" v-bind:currentId="currentId"></library>
+            <library v-bind:collection="library"
+                     v-bind:currentId="currentId"
+                     v-on:addCollection="addCollection()"
+                     v-on:selectCollection="selectCollection"
+                     v-on:delCollection="delCollection"></library>
           </div>
       </transition>
       <div class="workspace">
@@ -29,9 +33,9 @@
   import ColorSquare from './LandingPageView/ColorSquare'
   import EmptySquare from './LandingPageView/EmptySquare'
   import Library from './Library'
-//  const {dialog} = require('electron').remote
+  const {dialog} = require('electron').remote
   const ipcRenderer = require('electron').ipcRenderer
-//  const fs = require('fs')
+  const fs = require('fs')
   const guid = require('guid')
   const tinycolor = require('tinycolor2')
   const storage = require('electron-json-storage')
@@ -43,24 +47,14 @@
     }
     return true
   }
-
-  let library = {}
-  let currentId = ''
-//  let colors = []
-
-//  storage.set(USER_LIBRARY, {library: library}, function (error) {
-//    if (error) throw error
-//  })
-//  storage.clear(function (error) {
-//    if (error) throw error
-//  })
-  storage.get(USER_LIBRARY, function (error, data) {
-    if (error) throw error
-
-//    console.log(data)
-    if (!data) return
-    library = data.library
-  })
+  let _isCountObject = function (obj) {
+    let i = 0
+// eslint-disable-next-line no-unused-vars
+    for (let p in obj) {
+      i++
+    }
+    return i
+  }
 
   let newCollection = function () {
     return {
@@ -73,43 +67,23 @@
       ]]
     }
   }
-  if (_isEmptyObject(this.library)) {
+
+  function init () {
+    let state = {}
     let collection = newCollection()
-    library[collection.id] = collection
-    currentId = collection.id
+    state.library = {}
+    state.library[collection.id] = collection
+    state.currentId = collection.id
+    return state
   }
 
-//  ipcRenderer.on('file-save', function () {
-//    dialog.showSaveDialog(
-//      {'defaultPath': 'mycolors.json'},
-//      function (fileName) {
-//        if (fileName === undefined) return
-//
-//        fs.writeFile(fileName, JSON.stringify(colors), function (err) {
-//          if (err) {
-//            throw err
-//          }
-//        })
-//      })
-//  })
-//  ipcRenderer.on('file-open', function () {
-//    dialog.showOpenDialog(function (fileNames) {
-//      if (fileNames === undefined) return
-//
-//      let fileName = fileNames[0]
-//
-//      fs.readFile(fileName, 'utf-8', function (err, data) {
-//        if (err) {
-//          throw err
-//        }
-//        let tmp = JSON.parse(data)
-//        colors.splice(0, 1)
-//        tmp.forEach(function (item, index) {
-//          colors.push(tmp[index])
-//        })
-//      })
-//    })
-//  })
+  let state = init()
+
+//  if (_isEmptyObject(state.library)) {
+//    let collection = newCollection()
+//    state.library[collection.id] = collection
+//    state.currentId = collection.id
+//  }
 
   export default {
     components: {
@@ -120,9 +94,9 @@
     name: 'landing-page',
     data () {
       return {
-        library: library,
+        library: state.library,
         showLibrary: false,
-        currentId: currentId,
+        currentId: state.currentId,
         collection: (id) => {
           if (id) return this.library[id]
           return this.library[this.currentId]
@@ -173,12 +147,90 @@
       toggleLibrary: function () {
         this.showLibrary = !this.showLibrary
       },
-      newCollection: newCollection
+      newCollection: newCollection,
+      addCollection: function () {
+        let collection = newCollection()
+        this.library[collection.id] = collection
+        this.currentId = collection.id
+      },
+      delCollection: function (row) {
+        let count = _isCountObject(this.library)
+        if (count <= 1) {
+          this.addCollection()
+        } else {
+          for (let p in this.library) {
+            if (p !== row.id) {
+              this.currentId = p
+              break
+            }
+          }
+        }
+        delete this.library[row.id]
+      },
+      selectCollection: function (row) {
+        this.currentId = row.id
+      }
     },
     created: function () {
       let that = this
+
+      storage.get(USER_LIBRARY, function (error, data) {
+        if (error || !data || !data.library || _isEmptyObject(data.library)) {
+          let collection = that.newCollection()
+          that.library[collection.id] = collection
+          that.currentId = collection.id
+        } else {
+          that.library = data.library
+          that.currentId = data.currentId
+        }
+      })
+
       ipcRenderer.on('open-library', function () {
         that.toggleLibrary()
+      })
+
+      ipcRenderer.on('file-save', function () {
+        storage.set(USER_LIBRARY, {
+          library: that.library,
+          currentId: that.currentId
+        }, function (error) {
+          if (error) throw error
+        })
+      })
+      ipcRenderer.on('file-export', function () {
+        dialog.showSaveDialog(
+          {'defaultPath': 'library.colors'},
+          function (fileName) {
+            if (fileName === undefined) return
+
+            fs.writeFile(fileName, JSON.stringify(that.library), function (err) {
+              if (err) {
+                throw err
+              }
+            })
+          })
+      })
+      ipcRenderer.on('file-open', function () {
+        dialog.showOpenDialog(function (fileNames) {
+          if (fileNames === undefined) return
+
+          let fileName = fileNames[0]
+
+          fs.readFile(fileName, 'utf-8', function (err, data) {
+            if (err) {
+              throw err
+            }
+            let tmp = JSON.parse(data)
+            for (let p in that.library) {
+              delete that.library[p]
+            }
+            debugger
+            for (let p in tmp) {
+              that.library[p] = tmp[p]
+              that.currentId = p
+            }
+          })
+        })
       })
     }
   }
