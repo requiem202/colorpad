@@ -7,7 +7,7 @@
           <icon name="plus"></icon>
       </span>
       <span class="hide-btn"
-            v-on:click="hideSidebar()">
+            v-on:click="toggleLibrary()">
           <icon name="angle-double-left"></icon>
       </span>
     </div>
@@ -24,16 +24,21 @@
           <icon name="trash"></icon>
         </span>
         <span class="rename-btn"
-              v-on:click.stop="renameCollection(row)">
+              v-on:click.stop="editCollection(row)">
           <icon name="edit"></icon>
         </span>
       </li>
     </transition-group>
+    <edit-collection-modal :show.sync="showModal"
+                           v-on:close="modalClosed"
+                           v-model="editingRow">
+    </edit-collection-modal>
   </div>
 </template>
 
 <script>
   import Icon from 'vue-awesome/components/Icon.vue'
+  import EditCollectionModal from './Library/EditCollectionModal'
 
   export default {
     name: 'library',
@@ -42,7 +47,10 @@
       'currentId'
     ],
     data () {
-      return {}
+      return {
+        showModal: false,
+        editingRow: {}
+      }
     },
     methods: {
       isActive: function (row) {
@@ -58,12 +66,23 @@
       delCollection: function (row) {
         this.$emit('delCollection', row)
       },
-      hideSidebar: function () {
-        this.$emit('hideSidebar', null)
+      editCollection: function (row) {
+        this.showModal = true
+        this.editingRow = row
+      },
+      modalClosed: function (row) {
+        this.showModal = false
+        if (row) {
+          this.$emit('editCollection', row)
+        }
+      },
+      toggleLibrary: function () {
+        this.$emit('toggleLibrary', null)
       }
     },
     components: {
-      Icon
+      Icon,
+      EditCollectionModal
     }
   }
 </script>

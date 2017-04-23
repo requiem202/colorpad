@@ -6,7 +6,9 @@
                      v-bind:currentId="currentId"
                      v-on:addCollection="addCollection()"
                      v-on:selectCollection="selectCollection"
-                     v-on:delCollection="delCollection"></library>
+                     v-on:delCollection="delCollection"
+                     v-on:editCollection="editCollection"
+                     v-on:toggleLibrary="toggleLibrary"></library>
           </div>
       </transition>
       <div class="workspace">
@@ -95,7 +97,7 @@
     data () {
       return {
         library: state.library,
-        showLibrary: false,
+        showLibrary: true,
         currentId: state.currentId,
         collection: (id) => {
           if (id) return this.library[id]
@@ -166,6 +168,13 @@
           }
         }
         delete this.library[row.id]
+      },
+      editCollection: function (row) {
+//        for (let collection in this.library) {
+//          if (collection.id === row.id) {
+//            collection.name = row.name
+//          }
+//        }
       },
       selectCollection: function (row) {
         this.currentId = row.id
