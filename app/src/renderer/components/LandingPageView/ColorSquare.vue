@@ -1,5 +1,5 @@
 <template>
-  <span class="color-square" v-bind:style="{ backgroundColor: bg() }">
+  <span class="color-square" v-bind:style="{ backgroundColor: bg() }" v-on:dblclick="doubleClicked">
       <span class="del"
             v-bind:style="{color:textColor()}"
             v-on:click="delClicked()">
@@ -9,7 +9,8 @@
              class="bgHex"
              v-bind:value="value.bgHex"
              v-bind:style="{color:textColor()}"
-             v-on:input="updateValue($event.target.value)"/>
+             v-on:input="updateValue($event.target.value)"
+             v-on:dblclick.stop/>
   </span>
 </template>
 
@@ -22,7 +23,7 @@
       value: {
         type: Object,
         default: function () {
-          return { bgHex: '#ffffff' }
+          return {bgHex: '#ffffff'}
         }
       }
     },
@@ -34,10 +35,8 @@
           if (!color) {
             return '#ffffff'
           }
-          if (color.indexOf('#') !== 0) {
-            color = '#' + color
-            this.value.bgHex = color
-          }
+          color = '#' + color.replace(/#/g, '')
+          this.value.bgHex = color
           return color
         },
         textColor: () => {
@@ -56,6 +55,9 @@
       },
       delClicked: function () {
         this.$emit('del', this.value)
+      },
+      doubleClicked: function () {
+        this.$emit('doubleClicked', this.value)
       }
     },
     components: {
@@ -65,53 +67,56 @@
 </script>
 
 <style scoped lang="less">
-    .color-square {
-        display: inline-flex;
-        position: relative;
-        align-items: center;
-        justify-content: center;
-        width: 150px;
-        height: 150px;
-        transition: all linear 0.25s;
+  .color-square {
+    display: inline-flex;
+    position: relative;
+    align-items: center;
+    justify-content: center;
+    width: 150px;
+    height: 150px;
+    transition: all linear 0.25s;
 
-        margin: 3px;
+    margin: 3px;
+    cursor: pointer;
 
-        &:hover {
-            .del {
-                opacity: 1;
-            }
-        }
+    &:hover {
+      .del {
+        opacity: 1;
+      }
+    }
+  }
+
+  .color-square .bgHex {
+    min-width: 50px;
+    max-width: 80px;
+    font-size: 16px;
+    padding: 5px 0;
+    text-align: center;
+    border: 1px solid transparent;
+    background: transparent;
+    transition: color linear 0.25s;
+    text-transform: uppercase;
+
+    &:focus, &:active {
+      outline: none;
+      border-bottom: 1px solid #888;
+    }
+  }
+
+  .color-square .del {
+    position: absolute;
+    left: 0;
+    top: 0;
+    padding: 5px;
+    opacity: 0;
+    cursor: pointer;
+    color: #fff;
+    transition: opacity 0.15s linear;
+
+    .fa-icon {
+      height: 1.2em;
+      width: auto;
     }
 
-    .color-square .bgHex {
-        min-width: 50px;
-        max-width: 80px;
-        font-size: 16px;
-        padding: 5px 0;
-        text-align: center;
-        border: 1px solid transparent;
-        background: transparent;
-        transition: color linear 0.25s;
-
-        &:focus,&:active {
-            outline: none;
-            border-bottom: 1px solid #888;
-        }
-    }
-    .color-square .del {
-        position: absolute;
-        left: 0;
-        top: 0;
-        padding: 5px;
-        opacity: 0;
-        cursor: pointer;
-        color: #fff;
-        transition: opacity 0.15s linear;
-
-        .fa-icon {
-            height: 1.2em;
-            width: auto;
-        }
-
-    }
+  }
 </style>

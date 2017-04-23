@@ -1,6 +1,6 @@
 <template>
   <transition name="modal">
-    <div class="modal-mask" v-on:click="close" v-show="show">
+    <div class="modal-mask" :class="type" v-on:click="close" v-show="show">
       <div class="modal-container" @click.stop>
         <slot></slot>
       </div>
@@ -10,13 +10,13 @@
 
 <script>
   export default {
-    props: ['show', 'onClose'],
+    props: ['show', 'onClose', 'type'],
     methods: {
       close: function () {
         this.$emit('onClose')
       }
     },
-    ready: function () {
+    created: function () {
       document.addEventListener('keydown', (e) => {
         if (this.show && e.keyCode === 27) {
           this.$emit('onClose')
@@ -26,12 +26,12 @@
   }
 </script>
 
-<style>
-  * {
-    box-sizing: border-box;
-  }
+<style lang="less">
 
   .modal-mask {
+    * {
+      box-sizing: border-box;
+    }
     position: fixed;
     z-index: 9998;
     top: 0;
@@ -51,6 +51,19 @@
     box-shadow: 0 2px 8px rgba(0, 0, 0, .33);
     transition: all .3s ease;
     font-family: Helvetica, Arial, sans-serif;
+  }
+
+  .modal-mask.clear {
+    .modal-container {
+      width: 300px;
+      margin: 40px auto 0;
+      padding: 20px 30px;
+      background-color: transparent;
+      border-radius: 2px;
+      box-shadow: none;
+      transition: all .3s ease;
+      font-family: Helvetica, Arial, sans-serif;
+    }
   }
 
   .modal-header h3 {

@@ -1,33 +1,40 @@
 <template>
   <div class="main">
-      <transition name="slideIn">
-          <div class="library" v-show="showLibrary">
-            <library v-bind:collection="library"
-                     v-bind:currentId="currentId"
-                     v-on:addCollection="addCollection()"
-                     v-on:selectCollection="selectCollection"
-                     v-on:delCollection="delCollection"
-                     v-on:editCollection="editCollection"
-                     v-on:toggleLibrary="toggleLibrary"></library>
-          </div>
-      </transition>
-      <div class="workspace">
-          <transition-group name="colors" tag="ul">
-              <transition-group name="colors-row" tag="li" v-for="row in colors()" v-bind:key="row" class="colors-row">
-                  <color-square
-                          v-for="(item, index) in row"
-                          v-model="row[index]"
-                          v-bind:key="item"
-                          v-on:del="delItem(row, item, index)"
-                          class="colors-row-item">
-                  </color-square>
-                  <empty-square v-on:click.native="addItem(row)" v-bind:key="row"></empty-square>
-              </transition-group>
-          </transition-group>
-          <div>
-              <empty-square v-on:click.native="addRow()"></empty-square>
-          </div>
+    <transition name="slideIn">
+      <div class="library" v-show="showLibrary">
+        <library v-bind:collection="library"
+                 v-bind:currentId="currentId"
+                 v-on:addCollection="addCollection()"
+                 v-on:selectCollection="selectCollection"
+                 v-on:delCollection="delCollection"
+                 v-on:editCollection="editCollection"
+                 v-on:toggleLibrary="toggleLibrary"></library>
       </div>
+    </transition>
+    <div class="workspace">
+      <transition-group name="colors" tag="ul">
+        <transition-group name="colors-row" tag="li" v-for="row in colors()" v-bind:key="row" class="colors-row">
+          <color-square
+              v-for="(item, index) in row"
+              v-model="row[index]"
+              v-bind:key="item"
+              v-on:del="delItem(row, item, index)"
+              v-on:doubleClicked="doubleClicked"
+              class="colors-row-item">
+          </color-square>
+          <empty-square v-on:click.native="addItem(row)" v-bind:key="row"></empty-square>
+        </transition-group>
+      </transition-group>
+      <div>
+        <empty-square v-on:click.native="addRow()"></empty-square>
+      </div>
+      <color-picker-modal :show.sync="showColorPicker"
+                             v-on:colorPicked="colorPicked"
+                             v-on:close="colorPickerClosed"
+                          v-bind:value="currentColorPicker"
+                          type="clear">
+      </color-picker-modal>
+    </div>
   </div>
 </template>
 
@@ -35,6 +42,7 @@
   import ColorSquare from './LandingPageView/ColorSquare'
   import EmptySquare from './LandingPageView/EmptySquare'
   import Library from './Library'
+  import ColorPickerModal from './LandingPageView/ColorPickerModal'
   const {dialog} = require('electron').remote
   const ipcRenderer = require('electron').ipcRenderer
   const fs = require('fs')
@@ -81,17 +89,18 @@
 
   let state = init()
 
-//  if (_isEmptyObject(state.library)) {
-//    let collection = newCollection()
-//    state.library[collection.id] = collection
-//    state.currentId = collection.id
-//  }
+  //  if (_isEmptyObject(state.library)) {
+  //    let collection = newCollection()
+  //    state.library[collection.id] = collection
+  //    state.currentId = collection.id
+  //  }
 
   export default {
     components: {
       Library,
       ColorSquare,
-      EmptySquare
+      EmptySquare,
+      ColorPickerModal
     },
     name: 'landing-page',
     data () {
@@ -105,7 +114,10 @@
         },
         colors: () => {
           return this.collection().colors
-        }
+        },
+        currentColor: {},
+        currentColorPicker: {},
+        showColorPicker: false
       }
     },
     methods: {
@@ -170,14 +182,26 @@
         delete this.library[row.id]
       },
       editCollection: function (row) {
-//        for (let collection in this.library) {
-//          if (collection.id === row.id) {
-//            collection.name = row.name
-//          }
-//        }
       },
       selectCollection: function (row) {
         this.currentId = row.id
+      },
+      colorPicked: function (color) {
+        this.currentColor.bgHex = color.hex
+      },
+      doubleClicked: function (item) {
+        this.currentColor = item
+
+        let c = tinycolor(item.bgHex)
+        this.currentColorPicker.hex = c.toHexString()
+        this.currentColorPicker.hsl = c.toHsl()
+        this.currentColorPicker.hsv = c.toHsv()
+        this.currentColorPicker.rgba = c.toRgb()
+        this.currentColorPicker.a = c.getAlpha()
+        this.showColorPicker = true
+      },
+      colorPickerClosed: function () {
+        this.showColorPicker = false
       }
     },
     created: function () {
@@ -233,7 +257,6 @@
             for (let p in that.library) {
               delete that.library[p]
             }
-            debugger
             for (let p in tmp) {
               that.library[p] = tmp[p]
               that.currentId = p
@@ -246,44 +269,51 @@
 </script>
 
 <style scoped lang="less">
-    .main {
-        display: flex;
-    }
-    .library {
-        background-color: white;
-        min-width: 250px;
-    }
-    .workspace {
-        width: 100%;
-        transition: all .4s;
-    }
+  .main {
+    display: flex;
+  }
 
-    .slideIn-enter-active {
-        transition: all .4s
-    }
-    .slideIn-leave-active {
-        transition: all .7s
-    }
-    .slideIn-enter, .slideIn-leave-to {
-        transform: translateX(-100%);
-    }
-    ul {
-        list-style: none;
-        clear: both;
-        display: block;
-    }
+  .library {
+    background-color: white;
+    min-width: 250px;
+  }
 
-    .colors-row {
-        clear: both;
-        display: flex;
-        transition: all 0.25s ease-out;
-    }
-    .colors-enter, .colors-leave-to {
-        opacity: 0;
-        transform: translateY(-30px);
-    }
-    .colors-row-enter-active, .colors-row-leave-to {
-        opacity: 0;
-        transform: translateX(-30px);
-    }
+  .workspace {
+    width: 100%;
+    transition: all .4s;
+  }
+
+  .slideIn-enter-active {
+    transition: all .4s
+  }
+
+  .slideIn-leave-active {
+    transition: all .7s
+  }
+
+  .slideIn-enter, .slideIn-leave-to {
+    transform: translateX(-100%);
+  }
+
+  ul {
+    list-style: none;
+    clear: both;
+    display: block;
+  }
+
+  .colors-row {
+    clear: both;
+    display: flex;
+    transition: all 0.25s ease-out;
+  }
+
+  .colors-enter, .colors-leave-to {
+    opacity: 0;
+    transform: translateY(-30px);
+  }
+
+  .colors-row-enter-active, .colors-row-leave-to {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
 </style>

@@ -78,9 +78,5 @@
     "webpack": "^2.2.1",
     "webpack-dev-server": "^2.3.0",
     "webpack-merge": "^2.4.0"
-  },
-  "dependencies": {
-    "electron-json-storage": "^3.0.5",
-    "guid": "0.0.12"
   }
 }

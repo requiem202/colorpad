@@ -1,14 +1,14 @@
 <template>
   <div>
     <div class="header">
-      Collection
+      <img src="../../../images/colorpad.png">
       <span class="collection-btn"
             v-on:click="addCollection()">
           <icon name="plus"></icon>
       </span>
       <span class="hide-btn"
             v-on:click="toggleLibrary()">
-          <icon name="angle-double-left"></icon>
+          <icon name="chevron-circle-left"></icon>
       </span>
     </div>
     <transition-group name="collection" tag="ul">
@@ -88,25 +88,34 @@
 </script>
 
 <style scoped lang="less">
+  img {
+    padding-top: 10px;
+    max-width: 250px;
+  }
   .header {
     position: relative;
     font-size: 18px;
-    padding: 30px 8px 3px 8px;
+    //padding: 30px 8px 3px 8px;
     background-color: #eaeaea;
     font-weight: 900;
     font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    text-align: right;
   }
 
   .collection-btn {
-    float: right;
+    /*float: right;*/
     cursor: pointer;
+    padding-right: 8px;
+    padding-bottom: 8px;
+    color: #333;
   }
 
   .hide-btn {
     position: absolute;
-    right: 10px;
+    right: 8px;
     top: 5px;
     cursor: pointer;
+    color: #888;
   }
 
   .del-btn, .rename-btn {
