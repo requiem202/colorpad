@@ -20,7 +20,7 @@
     "unit": "cross-env BABEL_ENV=testing-unit karma start test/unit/karma.conf.js",
     "postinstall": "npm run lint:fix && cd app && npm install"
   },
-  "author": "Greg Holguin <simulatedgreg@gmail.com>",
+  "author": "Vachara Suwansophon <requiem202@gmail.com>",
   "license": "MIT",
   "devDependencies": {
     "babel-core": "^6.8.0",
